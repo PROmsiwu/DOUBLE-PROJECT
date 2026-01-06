@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EGY CHARGE & SOCIAL | AHMED ELTHRANY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        :root { --accent: #22d3ee; --bg: #020617; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; margin: 0; overflow-x: hidden; }
+
+        /* الأنظمة الأساسية */
+        .page { display: none; min-height: 100vh; padding-bottom: 90px; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(15px); }
+        
+        /* شريط التنقل السفلي */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); z-index: 5000; }
+        .nav-item { color: #64748b; text-align: center; cursor: pointer; flex: 1; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); transform: translateY(-3px); }
+        .nav-item i { font-size: 20px; }
+        .nav-item p { font-size: 9px; margin-top: 4px; font-weight: bold; }
+
+        input, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); outline: none; color: white; }
+        input:focus { border-color: var(--accent); }
+
+        .reel-video { height: 75vh; width: 100%; object-fit: cover; border-radius: 25px; }
+        #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <h1 class="text-4xl font-black italic text-cyan-400 animate-pulse">EGY CHARGE</h1>
+        <p class="mt-2 text-[10px] text-gray-500 tracking-[5px]">AHMED ELTHRANY</p>
+        <div class="mt-8 w-6 h-6 border-2 border-t-cyan-500 border-gray-800 rounded-full animate-spin"></div>
+    </div>
+
+    <div id="authScreen" class="fixed inset-0 flex flex-col justify-center items-center p-6 z-[9000] bg-[#020617] hidden">
+        <div class="glass p-8 rounded-[40px] w-full max-w-sm text-center">
+            <h2 class="text-2xl font-black mb-8">تسجيل الدخول 🚀</h2>
+            
+            <button onclick="loginWithGoogle()" class="w-full bg-white text-black py-3 rounded-2xl font-bold mb-6 flex items-center justify-center gap-2 shadow-lg">
+                <img src="https://www.google.com/favicon.ico" class="w-4"> دخول العملاء بجوجل
+            </button>
+
+            <div class="flex items-center gap-2 mb-6 opacity-20"><hr class="flex-1"><span>الأدمن</span><hr class="flex-1"></div>
+
+            <div class="space-y-3">
+                <input type="text" id="adminUser" class="w-full p-3 rounded-xl text-sm" placeholder="اسم المستخدم">
+                <input type="password" id="adminPass" class="w-full p-3 rounded-xl text-sm" placeholder="كلمة المرور">
+                <button onclick="loginAsAdmin()" class="w-full bg-cyan-900/40 border border-cyan-500/30 py-3 rounded-xl font-bold text-cyan-400">دخول الإدارة</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+        <nav class="p-4 flex justify-between items-center sticky top-0 glass z-[1000]">
+            <span class="text-xl font-black text-cyan-400">EGY CHARGE</span>
+            <div id="adminBadge" class="hidden bg-red-600 px-2 py-0.5 rounded text-[8px] font-black animate-bounce">ADMIN MODE</div>
+        </nav>
+
+        <div id="storePage" class="page active px-4 pt-4">
+            <div id="adminStoreTool" class="hidden mb-6">
+                <button onclick="openModal('prodModal')" class="w-full border-2 border-dashed border-cyan-500/30 p-4 rounded-2xl text-cyan-400 text-xs font-bold">+ إضافة منتج للمتجر</button>
+            </div>
+            <div id="itemsGrid" class="grid grid-cols-2 gap-3"></div>
+        </div>
+
+        <div id="socialPage" class="page px-4 pt-4">
+            <div class="glass p-4 rounded-3xl mb-6">
+                <textarea id="postText" class="w-full bg-transparent p-2 text-sm min-h-[60px]" placeholder="بماذا تفكر؟"></textarea>
+                <div class="flex justify-between items-center mt-3 border-t border-white/5 pt-3">
+                    <input type="file" id="postFile" hidden accept="image/*">
+                    <label for="postFile" class="text-cyan-400 text-xs cursor-pointer"><i class="fas fa-image mr-1"></i> صورة</label>
+                    <button onclick="createPost()" class="bg-cyan-600 px-6 py-1.5 rounded-xl text-[10px] font-bold">نشر</button>
+                </div>
+            </div>
+            <div id="socialFeed" class="space-y-4"></div>
+        </div>
+
+        <div id="reelsPage" class="page px-4 pt-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-black">EGY REELS 🎬</h2>
+                <button onclick="document.getElementById('reelFile').click()" class="text-cyan-400 text-xs font-bold">+ إضافة ريلز</button>
+                <input type="file" id="reelFile" hidden accept="video/*" onchange="uploadReel(this)">
+            </div>
+            <div id="reelsFeed" class="space-y-6"></div>
+        </div>
+
+        <div id="profilePage" class="page p-8 text-center">
+            <div class="relative inline-block mb-4">
+                <img id="uPic" class="w-24 h-24 rounded-full border-4 border-cyan-500 object-cover mx-auto">
+            </div>
+            <h2 id="uName" class="text-xl font-black">المستخدم</h2>
+            <div class="mt-10 space-y-3">
+                <button onclick="logout()" class="w-full glass p-4 rounded-2xl text-red-500 font-bold text-sm">تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showPage('store')"><i class="fas fa-shopping-bag"></i><p>المتجر</p></div>
+            <div class="nav-item" onclick="showPage('social')"><i class="fas fa-users"></i><p>المجتمع</p></div>
+            <div class="nav-item" onclick="showPage('reels')"><i class="fas fa-play-circle"></i><p>ريلز</p></div>
+            <div class="nav-item" onclick="showPage('profile')"><i class="fas fa-user-circle"></i><p>حسابي</p></div>
+        </div>
+    </div>
+
+    <div id="prodModal" class="fixed inset-0 bg-black/90 z-[6000] hidden p-8">
+        <h2 class="text-xl font-black mb-6">منتج جديد</h2>
+        <div class="space-y-4">
+            <input id="pGame" placeholder="اسم اللعبة" class="w-full p-4 rounded-xl">
+            <input id="pPack" placeholder="الباقة" class="w-full p-4 rounded-xl">
+            <input id="pPrice" type="number" placeholder="السعر" class="w-full p-4 rounded-xl">
+            <input type="file" id="pFile" class="text-xs">
+            <button onclick="saveProduct()" class="w-full bg-cyan-600 py-4 rounded-xl font-bold mt-4">حفظ المنتج</button>
+            <button onclick="closeModal('prodModal')" class="w-full text-gray-500 py-2">إلغاء</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCd6mOpEJyiUSAAhmm2NbhT80MMY0UQJcc",
+            authDomain: "project-fe025bb5-b1cc-4b8f-93e.firebaseapp.com",
+            databaseURL: "https://project-fe025bb5-b1cc-4b8f-93e-default-rtdb.firebaseio.com",
+            projectId: "project-fe025bb5-b1cc-4b8f-93e",
+            storageBucket: "project-fe025bb5-b1cc-4b8f-93e.firebasestorage.app",
+            messagingSenderId: "148069353954",
+            appId: "1:148069353954:web:783adf7e8a0c796393d1bb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        const admins = [
+            { u: 'ahmedg', p: 'ah2011', n: 'الأدمن أحمد' },
+            { u: 'bekham12', p: 'beko2011', n: 'الأدمن بيكهام' },
+            { u: 'aligazi1', p: 'ali2011', n: 'الأدمن علي' }
+        ];
+
+        // إدارة الحالة
+        auth.onAuthStateChanged(user => {
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                if(user || localStorage.getItem('isAdmin')) {
+                    document.getElementById('app').classList.remove('hidden');
+                    document.getElementById('authScreen').classList.add('hidden');
+                    if(localStorage.getItem('isAdmin')) {
+                        document.getElementById('adminBadge').classList.remove('hidden');
+                        document.getElementById('adminStoreTool').classList.remove('hidden');
+                    }
+                    loadStore(); loadSocial(); loadReels(); setupUser(user);
+                } else {
+                    document.getElementById('authScreen').classList.remove('hidden');
+                }
+            }, 2500);
+        });
+
+        // تسجيل الدخول
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(() => localStorage.removeItem('isAdmin'));
+        }
+
+        function loginAsAdmin() {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            const found = admins.find(a => a.u === u && a.p === p);
+            if(found) {
+                localStorage.setItem('isAdmin', 'true');
+                localStorage.setItem('adminName', found.n);
+                location.reload();
+            } else { alert("بيانات الأدمن خطأ!"); }
+        }
+
+        function setupUser(user) {
+            if(localStorage.getItem('isAdmin')) {
+                document.getElementById('uName').innerText = localStorage.getItem('adminName');
+                document.getElementById('uPic').src = "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+            } else if(user) {
+                document.getElementById('uName').innerText = user.displayName;
+                document.getElementById('uPic').src = user.photoURL;
+            }
+        }
+
+        // التنقل
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(id + 'Page').classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // المتجر
+        async function saveProduct() {
+            const file = document.getElementById('pFile').files[0];
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'ml_default');
+            const res = await fetch('https://api.cloudinary.com/v1_1/drtn0oxxq/image/upload',{method:'POST',body:fd}).then(r=>r.json());
+            await db.ref('products').push({
+                game: document.getElementById('pGame').value,
+                pack: document.getElementById('pPack').value,
+                price: document.getElementById('pPrice').value,
+                img: res.secure_url
+            });
+            closeModal('prodModal');
+        }
+
+        function loadStore() {
+            db.ref('products').on('value', s => {
+                const grid = document.getElementById('itemsGrid');
+                grid.innerHTML = "";
+                const data = s.val();
+                if(data) Object.keys(data).forEach(id => {
+                    const item = data[id];
+                    grid.innerHTML += `
+                        <div class="glass p-3 rounded-2xl relative">
+                            ${localStorage.getItem('isAdmin') ? `<button onclick="deleteP('${id}')" class="absolute top-2 left-2 text-red-500 text-[8px]">حذف</button>` : ''}
+                            <img src="${item.img}" class="w-full h-24 object-cover rounded-xl mb-2">
+                            <h4 class="text-[10px] font-bold truncate">${item.game}</h4>
+                            <p class="text-[8px] text-gray-400">${item.pack}</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-cyan-400 text-xs font-bold">${item.price} ج.م</span>
+                                <a href="https://wa.me/201234567890" class="bg-cyan-600 px-3 py-1 rounded text-[8px] font-bold">شحن</a>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        // السوشيال والريلز
+        async function createPost() {
+            const text = document.getElementById('postText').value;
+            const file = document.getElementById('postFile').files[0];
+            let img = "";
+            if(file) {
+                const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'ml_default');
+                const res = await fetch('https://api.cloudinary.com/v1_1/drtn0oxxq/image/upload',{method:'POST',body:fd}).then(r=>r.json());
+                img = res.secure_url;
+            }
+            await db.ref('posts').push({
+                name: localStorage.getItem('isAdmin') ? localStorage.getItem('adminName') : auth.currentUser.displayName,
+                pic: localStorage.getItem('isAdmin') ? "https://cdn-icons-png.flaticon.com/512/6024/6024190.png" : auth.currentUser.photoURL,
+                text, img, time: Date.now(), likes: 0
+            });
+            document.getElementById('postText').value = "";
+        }
+
+        function loadSocial() {
+            db.ref('posts').orderByChild('time').on('value', s => {
+                const feed = document.getElementById('socialFeed');
+                feed.innerHTML = "";
+                const data = s.val();
+                if(data) Object.keys(data).reverse().forEach(id => {
+                    const p = data[id];
+                    feed.innerHTML += `
+                        <div class="glass p-4 rounded-3xl">
+                            <div class="flex items-center gap-3 mb-3">
+                                <img src="${p.pic}" class="w-8 h-8 rounded-full border border-cyan-500/30">
+                                <h4 class="text-xs font-bold">${p.name}</h4>
+                            </div>
+                            <p class="text-xs mb-3">${p.text}</p>
+                            ${p.img ? `<img src="${p.img}" class="w-full rounded-2xl mb-3">` : ''}
+                            <button onclick="db.ref('posts/${id}/likes').transaction(l=>l+1)" class="text-[10px] text-gray-500"><i class="fas fa-heart text-red-500 mr-1"></i> ${p.likes || 0}</button>
+                        </div>`;
+                });
+            });
+        }
+
+        async function uploadReel(input) {
+            const file = input.files[0]; if(!file) return;
+            alert("بدأ رفع الريلز...");
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'ml_default');
+            const res = await fetch('https://api.cloudinary.com/v1_1/drtn0oxxq/video/upload',{method:'POST',body:fd}).then(r=>r.json());
+            await db.ref('reels').push({ url: res.secure_url, name: localStorage.getItem('isAdmin') ? localStorage.getItem('adminName') : auth.currentUser.displayName });
+        }
+
+        function loadReels() {
+            db.ref('reels').on('value', s => {
+                const feed = document.getElementById('reelsFeed');
+                feed.innerHTML = "";
+                const data = s.val();
+                if(data) Object.keys(data).reverse().forEach(id => {
+                    feed.innerHTML += `
+                        <div class="relative">
+                            <video src="${data[id].url}" loop muted autoplay playsinline class="reel-video" onclick="this.paused?this.play():this.pause()"></video>
+                            <div class="absolute bottom-6 right-6 font-bold text-xs bg-black/40 p-2 rounded-lg">@ ${data[id].name}</div>
+                        </div>`;
+                });
+            });
+        }
+
+        // المساعدين
+        function openModal(id) { document.getElementById(id).style.display = 'block'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        window.deleteP = (id) => { if(confirm("حذف؟")) db.ref(`products/${id}`).remove(); };
+        function logout() { auth.signOut(); localStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
